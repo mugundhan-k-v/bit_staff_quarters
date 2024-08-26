@@ -1,0 +1,70 @@
+/* AnnouncementPage.css */
+.announcement-container {
+    padding: 20px;
+    max-width: 800px;
+    margin: 0 auto;
+    background-color: #f4f6f9; /* Light background for contrast */
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.announcement-title {
+    font-size: 2rem;
+    color: #2c3e50;
+    margin-bottom: 10px;
+    text-align: center;
+}
+
+.announcement-description {
+    font-size: 1.2rem;
+    color: #34495e;
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.message-box {
+    background-color: #ecf0f1;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.message-box:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.message-box h2 {
+    font-size: 1.5rem;
+    color: #2c3e50;
+    margin-bottom: 10px;
+}
+
+.message-box p {
+    font-size: 1rem;
+    color: #7f8c8d;
+}
+
+@media (max-width: 768px) {
+    .announcement-container {
+        padding: 15px;
+    }
+
+    .announcement-title {
+        font-size: 1.5rem;
+    }
+
+    .announcement-description {
+        font-size: 1rem;
+    }
+
+    .message-box h2 {
+        font-size: 1.2rem;
+    }
+
+    .message-box p {
+        font-size: 0.9rem;
+    }
+}

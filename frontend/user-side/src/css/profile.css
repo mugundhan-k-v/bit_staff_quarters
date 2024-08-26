@@ -1,0 +1,77 @@
+/* profile.css */
+body{
+  background-color: #F5F3FF;
+}
+.profile-page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.content {
+  width: 100%;
+  max-width: 1200px;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.details-container {
+  margin-bottom: 20px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  padding: 20px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease-in-out;
+  background-color: #fff;
+}
+
+.details-container:hover {
+  transform: scale(1.02);
+}
+
+.details-container h2 {
+  margin-top: 0;
+  color: #333;
+}
+
+.personal-details-container,
+.contact-details-container,
+.vehicle-details-container {
+  display: grid;
+  grid-template-columns: repeat(1, 1fr); /* Single column by default */
+  gap: 10px;
+}
+
+/* Media Query for Medium Screens (768px and above) */
+@media (min-width: 768px) {
+  .personal-details-container,
+  .contact-details-container,
+  .vehicle-details-container {
+    grid-template-columns: repeat(2, 1fr); /* Two columns per row on medium screens */
+  }
+}
+
+/* Media Query for Large Screens (1200px and above) */
+@media (min-width: 1200px) {
+  .personal-details-container,
+  .contact-details-container,
+  .vehicle-details-container {
+    grid-template-columns: repeat(3, 1fr); /* Three columns per row on large screens */
+  }
+}
+
+.personal-details-container p,
+.contact-details-container p,
+.vehicle-details-container p {
+  margin: 5px 0;
+  color: #333;
+}
+
+.personal-details-container strong,
+.contact-details-container strong,
+.vehicle-details-container strong {
+  padding-right: 10px;
+}

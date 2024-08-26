@@ -1,0 +1,51 @@
+.home-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background-color: #f0f4f8; /* Light gray background color */
+  color: #333; /* Darker text color for better readability */
+  text-align: center;
+  padding: 20px;
+  font-family: 'Arial', sans-serif; /* General font for the page */
+}
+
+.welcome-message {
+  background-color: #ffffff; /* White background for contrast */
+  padding: 20px;
+  border-radius: 10px;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1); /* Subtle shadow for depth */
+  color: #333; /* Dark text color */
+  font-family: 'Georgia', serif; /* Serif font for a classic look */
+}
+
+.thought-of-the-day {
+  background-color: #e0f7fa; /* Light teal background for a calming effect */
+  padding: 20px;
+  border-radius: 10px;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1); /* Consistent shadow with other sections */
+  color: #00695c; /* Dark teal text color for readability */
+  font-family: 'Courier New', Courier, monospace; /* Monospace font for a unique feel */
+}
+
+.emergency-contact {
+  background-color: #fff3e0; /* Light peach background for a warm feel */
+  color: #000; /* Black text color for high contrast */
+  padding: 20px;
+  text-align: left;
+  width: 70%;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1); /* Consistent shadow */
+  font-family: 'Verdana', sans-serif; /* Sans-serif font for clarity */
+}
+
+@media (max-width: 768px) {
+  .emergency-contact, .welcome-message, .thought-of-the-day {
+    margin-left: 10px;
+    margin-right: 10px;
+    width: auto; /* Adjust width for mobile view */
+  }
+}
