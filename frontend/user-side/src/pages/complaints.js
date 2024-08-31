@@ -14,7 +14,7 @@ const ComplaintsPage = ({ complaints }) => {
     return (
         <PageLayout>
         <div className="details-page">
-            <div className="content">
+            <div className="details-content">
                 <h1>Complaints</h1>
                 <div className="search-bar">
                     <input type="text" placeholder="Search..." />

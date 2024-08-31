@@ -13,7 +13,7 @@ const GuestDetailsPage = ({ guests,sidebarCollapsed }) => {
     return (
         <PageLayout>
         <div  className={`details-page ${sidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
-            <div className="content">
+            <div className="details-content">
             <h1>Guest Details</h1>
                 <div className="search-bar">
                     <input type="text" placeholder="Search..." />
