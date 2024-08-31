@@ -1,6 +1,7 @@
-
+// PageLayout.js
 import React, { useState } from 'react';
 import SideNav from './sidenav';
+import ProfileHeader from './ProfileHeader';
 import './PageLayout.css';
 
 const PageLayout = ({ children }) => {
@@ -12,6 +13,7 @@ const PageLayout = ({ children }) => {
 
   return (
     <div className="page-container">
+      <ProfileHeader isCollapsed={isCollapsed} />
       <SideNav isCollapsed={isCollapsed} onToggle={handleSidebarToggle} />
       <div className={`page-content ${isCollapsed ? 'collapsed' : ''}`}>
         {children}

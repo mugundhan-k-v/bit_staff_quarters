@@ -58,7 +58,7 @@ h1 {
   height: 40px; /* Reduced height */
   position: absolute;
   right: 20px; /* Align to the right */
-  top: 20px; /* Adjust vertical alignment as needed */
+  top: 55px; /* Adjust vertical alignment as needed */
 }
 
 .edit-button:hover {
