@@ -1,40 +1,90 @@
-/* profile.css */
-body{
+body {
   background-color: #F5F3FF;
 }
+
 .profile-page {
   display: flex;
   flex-direction: column;
   align-items: center;
-
-  padding: 20px;
+  padding: 30px 20px;
   box-sizing: border-box;
 }
 
 .content {
   width: 100%;
-  max-width: 1200px;
+  max-width: 1000px;
   padding: 20px;
   box-sizing: border-box;
+  background-color: #fff;
+  border-radius: 10px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); /* Deeper shadow for the card effect */
+}
+
+h1 {
+  color: #080064;
+  text-align: center;
+  margin-bottom: 20px;
+  font-size: 28px;
+  font-weight: bold;
 }
 
 .details-container {
   margin-bottom: 20px;
-  border: 1px solid #ccc;
-  border-radius: 5px;
   padding: 20px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-  transition: transform 0.3s ease-in-out;
-  background-color: #fff;
-}
-
-.details-container:hover {
-  transform: scale(1.02);
+  border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
 }
 
 .details-container h2 {
-  margin-top: 0;
-  color: #333;
+  color: #080064;
+  margin-bottom: 15px;
+  font-size: 22px;
+  border-bottom: 2px solid #080064;
+  padding-bottom: 10px;
+}
+.edit-button {
+  padding: 5px; /* Reduced padding */
+  background-color: #007bff;
+  color: #fff;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 40px; /* Reduced width */
+  height: 40px; /* Reduced height */
+  position: absolute;
+  right: 20px; /* Align to the right */
+  top: 20px; /* Adjust vertical alignment as needed */
+}
+
+.edit-button:hover {
+  background-color: #0056b3;
+}
+input[type="text"],
+input[type="email"],
+input[type="number"],
+textarea {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 15px; /* Add space between input fields */
+  border: 2px solid #ccc; /* Border for input fields */
+  border-radius: 5px; /* Rounded corners */
+  box-sizing: border-box;
+  font-size: 16px; /* Font size for input text */
+  transition: border-color 0.3s ease; /* Smooth transition for focus state */
+}
+
+/* Style for input fields when focused */
+input[type="text"]:focus,
+input[type="email"]:focus,
+input[type="number"]:focus,
+textarea:focus {
+  border-color: #007bff; /* Change border color on focus */
+  outline: none; /* Remove default outline */
 }
 
 .personal-details-container,
@@ -42,7 +92,7 @@ body{
 .vehicle-details-container {
   display: grid;
   grid-template-columns: repeat(1, 1fr); /* Single column by default */
-  gap: 10px;
+  gap: 15px; /* Increased gap for better readability */
 }
 
 /* Media Query for Medium Screens (768px and above) */
@@ -66,12 +116,14 @@ body{
 .personal-details-container p,
 .contact-details-container p,
 .vehicle-details-container p {
-  margin: 5px 0;
-  color: #333;
+  margin: 0;
+  color: #080064;
+  font-size: 16px;
 }
 
 .personal-details-container strong,
 .contact-details-container strong,
 .vehicle-details-container strong {
   padding-right: 10px;
+  font-weight: bold;
 }
