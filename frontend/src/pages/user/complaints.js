@@ -2,7 +2,7 @@
 //complaints.js
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import PageLayout from '../component/PageLayout';
+import PageLayout from '../../component/PageLayout';
 
 const ComplaintsPage = ({ complaints }) => {
     const navigate = useNavigate();

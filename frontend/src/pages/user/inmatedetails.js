@@ -1,8 +1,8 @@
 // inmatedetails.js
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import PageLayout from '../component/PageLayout'; 
-import '../css/inmatedetails.css';
+import PageLayout from '../../component/PageLayout'; 
+import '../../css/user/inmatedetails.css';
 
 const InmateDetailsPage = ({ inmates, sidebarCollapsed }) => {
   const navigate = useNavigate();

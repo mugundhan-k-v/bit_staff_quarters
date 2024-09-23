@@ -1,7 +1,7 @@
 //guest.js
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import PageLayout from '../component/PageLayout';
+import PageLayout from '../../component/PageLayout';
 
 const GuestDetailsPage = ({ guests,sidebarCollapsed }) => {
     const navigate = useNavigate();

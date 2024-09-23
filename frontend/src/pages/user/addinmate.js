@@ -2,8 +2,8 @@
 //addinmate.js
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import '../css/addinmate.css'
-import PageLayout from '../component/PageLayout';
+import '../../css/user/addinmate.css'
+import PageLayout from '../../component/PageLayout';
 
 const AddInmatePage = ({ addInmate }) => {
     const [name, setName] = useState('');
