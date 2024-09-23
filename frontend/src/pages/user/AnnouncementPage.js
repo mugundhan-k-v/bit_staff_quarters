@@ -1,6 +1,6 @@
 import React from 'react';
-import PageLayout from '../component/PageLayout';
-import '../css/AnnouncementPage.css';
+import PageLayout from '../../component/PageLayout';
+import '../../css/user/AnnouncementPage.css';
 
 const AnnouncementPage = () => {
     const announcements = [

@@ -2,8 +2,8 @@
 //addcomplaint.js
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import PageLayout from '../component/PageLayout';
-import '../css/addcomplaint.css'
+import PageLayout from '../../component/PageLayout';
+import '../../css/user/addcomplaint.css'
 
 const AddComplaintPage = ({ addComplaint }) => {
     const [id] = useState(generateId());

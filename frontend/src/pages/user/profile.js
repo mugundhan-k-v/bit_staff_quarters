@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import PageLayout from '../component/PageLayout';
-import '../css/profile.css';
+import PageLayout from '../../component/PageLayout';
+import '../../css/user/profile.css';
 
 const ProfilePage = () => {
   const [isEditing, setIsEditing] = useState(false);
@@ -33,7 +33,7 @@ const ProfilePage = () => {
   return (
     <PageLayout>
       <div className="profile-page">
-        <div className="content">
+        <div className="contents">
           <div className="header-container">
             <h1>Profile Page</h1>
             <button className="edit-button" onClick={toggleEditMode}>
