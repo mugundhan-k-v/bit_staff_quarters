@@ -69,4 +69,18 @@
     text-align: center;
     font-weight: bolder;
   }
+  .google-signin-button {
+    width: 100%;
+    padding: 10px;
+    background-color: #4B6EF1;
+    border: none;
+    color: white;
+    font-size: 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
   
+  .google-signin-button:hover {
+    background-color: #357ae8;
+  }

@@ -1,13 +1,21 @@
-import React from 'react';
-import PageLayout from '../../component/PageLayout';
+import React, { useState, useEffect } from 'react';
+import PageLayout from '../../component/userPageLayout';
 import '../../css/user/AnnouncementPage.css';
 
 const AnnouncementPage = () => {
-    const announcements = [
-        { id: 1, title: "Maintenance Notice", content: "Scheduled maintenance will take place on 25th August. Please be prepared for a temporary shutdown." },
-        { id: 2, title: "Community Event", content: "Join us for a community gathering on 28th August. All residents are welcome!" },
-        // Add more announcements as needed
-    ];
+    const [announcements, setAnnouncements] = useState([]);
+
+    useEffect(() => {
+        fetch('http://localhost:5000/api/announcements')
+            .then(response => response.json())
+            .then(data => {
+                console.log('Fetched announcements:', data); // Debugging line
+                setAnnouncements(data);
+            })
+            .catch(error => {
+                console.error('Error fetching announcements:', error); // Debugging line
+            });
+    }, []);
 
     return (
         <PageLayout>
@@ -16,7 +24,7 @@ const AnnouncementPage = () => {
                 <p className="announcement-description">Stay updated with the latest community news and announcements.</p>
                 <div className="message-box">
                     {announcements.map(announcement => (
-                        <div key={announcement.id} className="message">
+                        <div key={announcement._id} className="message">
                             <h3>{announcement.title}</h3>
                             <p>{announcement.content}</p>
                         </div>

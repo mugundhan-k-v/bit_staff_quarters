@@ -1,6 +1,7 @@
-// src/pages/HomePage.js
+
+//HomePage.js
 import React from 'react';
-import PageLayout from '../../component/PageLayout'; // Ensure the correct path to PageLayout
+import PageLayout from '../../component/userPageLayout'; // Ensure the correct path to PageLayout
 import '../../css/user/homepage.css';
 
 const HomePage = () => {

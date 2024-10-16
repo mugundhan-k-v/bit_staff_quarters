@@ -1,76 +1,134 @@
+import React, { useState, useContext, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import { FacultyContext } from '../../context/FacultyContext';
+import '../../css/login.css';
+import { gapi } from 'gapi-script';
 
-  //frontend/src/auth/login.js
-  import React, { useState } from 'react';
-  import { useNavigate } from 'react-router-dom';
-  import '../../css/login.css';
+const LoginPage = () => {
+  const [facultyId, setFacultyId] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  const navigate = useNavigate();
+  const { setFacultyId: setGlobalFacultyId, setIsAuthenticated } = useContext(FacultyContext);
 
-  const LoginPage = () => {
-    const [username, setUsername] = useState('');
-    const [password, setPassword] = useState('');
-    const [error, setError] = useState('');
-    const [success, setSuccess] = useState('');
+  // Initialize the Google API client on component mount
+  useEffect(() => {
+    function start() {
+      gapi.load('auth2', () => {
+        gapi.auth2.init({
+          client_id: '4952283494-jggmf8d19jvo55kqrsd3s6ro5m5hvq2a.apps.googleusercontent.com',
+          scope: 'profile email',
+        }).then(() => {
+          console.log('Google Auth initialized');
+        }).catch((error) => {
+          console.error('Error initializing Google Auth', error);
+        });
+      });
+    }
+    start();
+  }, []);
 
-    const navigate = useNavigate();
+  // Handle form submit for faculty login
+  const handleSubmit = async (e) => {
+    e.preventDefault();
 
-    const correctUsername = 'user';
-    const correctPassword = 'password123';
-    const adminUsername = 'admin';
-    const adminPassword = 'admin';
+    if (facultyId === '' || password === '') {
+      setError('Faculty ID and password are required.');
+      setSuccess('');
+      return;
+    }
 
-    const handleSubmit = (e) => {
-      e.preventDefault();
-      if (username === '' || password === '') {
-        setError('Username and password are required.');
-        setSuccess('');
-      } else if (username === correctUsername && password === correctPassword) {
-        setSuccess('Login successful!');
-        setError('');
-        setTimeout(() => {
-          navigate('/homepage');
-        }, 1000); 
-      }else if (username === adminUsername && password === adminPassword) {
-        setSuccess('Login successful!');
-        setError('');
-        setTimeout(() => {
-          navigate('/Adminhomepage');
-        }, 1000); 
+    try {
+      const response = await axios.post('http://localhost:5000/api/login', { facultyId, password });
+      setSuccess(response.data.message);
+      setError('');
+
+      // Set the global facultyId and authentication state
+      setGlobalFacultyId(facultyId);
+      setIsAuthenticated(true);
+
+      // Navigate to the appropriate page based on the role
+      if (response.data.role === 'Admin') {
+        navigate('/Adminhomepage');
+      } else if (response.data.role === 'User') {
+        navigate('/homepage');
       }
-       else {
-        setError('Invalid username or password.');
-        setSuccess('');
-      }
-    };
-
-    return (
-      <div className="login-container">
-          <form className="login-form" onSubmit={handleSubmit}>
-          {error && <div className="error-message">{error}</div>}
-          {success && <div className="success-message">{success}</div>}
-          <h2>Login</h2>
-            <div className="form-group">
-              <label htmlFor="username">Username</label>
-              <input
-                type="text"
-                id="username"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                placeholder="Enter your username"
-              />
-            </div>
-            <div className="form-group">
-              <label htmlFor="password">Password</label>
-              <input
-                type="password"
-                id="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Enter your password"
-              />
-            </div>
-            <button type="submit" className="login-button">Login</button>
-          </form>
-        </div>
-    );
+    } catch (error) {
+      setError('Invalid faculty ID or password.');
+      setSuccess('');
+    }
   };
 
-  export default LoginPage;
+  // Handle Google Sign-In
+  const handleGoogleSignIn = async () => {
+    const auth2 = gapi.auth2.getAuthInstance();
+    if (auth2) {
+      auth2.signIn().then(async (googleUser) => {
+        const tokenId = googleUser.getAuthResponse().id_token;
+
+        try {
+          const res = await axios.post('http://localhost:5000/api/google-login', { tokenId });
+          const { facultyId, role } = res.data;
+
+          // Set the global facultyId and authentication state
+          setGlobalFacultyId(facultyId);
+          setIsAuthenticated(true);
+
+          // Navigate to the appropriate page based on the role
+          if (role === 'Admin') {
+            navigate('/Adminhomepage');
+          } else if (role === 'User') {
+            navigate('/homepage');
+          }
+        } catch (error) {
+          setError('Google Sign-In failed.');
+          setSuccess('');
+        }
+      }).catch((error) => {
+        setError('Google Sign-In was unsuccessful. Try again later.');
+        console.error(error);
+      });
+    } else {
+      setError('Google Auth instance is not initialized.');
+      console.error('Google Auth instance is null');
+    }
+  };
+
+  return (
+    <div className="login-container">
+      <form className="login-form" onSubmit={handleSubmit}>
+        {error && <div className="error-message">{error}</div>}
+        {success && <div className="success-message">{success}</div>}
+        <h2>Login</h2>
+        <div className="form-group">
+          <label htmlFor="facultyId">Faculty ID</label>
+          <input
+            type="text"
+            id="facultyId"
+            value={facultyId}
+            onChange={(e) => setFacultyId(e.target.value)}
+            placeholder="Enter your Faculty ID"
+          />
+        </div>
+        <div className="form-group">
+          <label htmlFor="password">Password</label>
+          <input
+            type="password"
+            id="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="Enter your password"
+          />
+        </div>
+        <button type="submit" className="login-button">Login</button>
+        <button type="button" className="google-signin-button" onClick={handleGoogleSignIn}>
+          Sign in with Google
+        </button>
+      </form>
+    </div>
+  );
+};
+
+export default LoginPage;

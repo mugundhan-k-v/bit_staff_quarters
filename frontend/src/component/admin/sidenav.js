@@ -1,8 +1,8 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { AiOutlineHome,  AiOutlineUsergroupAdd, AiOutlineFileAdd, AiOutlineExclamationCircle, AiOutlineLogin, AiOutlineMenuFold, AiOutlineMenuUnfold } from 'react-icons/ai';
+import { AiOutlineHome,AiOutlineUser, AiOutlineUsergroupAdd, AiOutlineNotification, AiOutlineFileAdd, AiOutlineExclamationCircle, AiOutlineLogin, AiOutlineMenuFold, AiOutlineMenuUnfold } from 'react-icons/ai';
 import styles from './Sidebar.module.css';
-// AiOutlineUser,
+
 const SideNav = ({ isCollapsed, onToggle }) => {
   return (
     <nav className={`${styles.sidebar} ${isCollapsed ? styles.collapsed : ''}`}>
@@ -15,11 +15,11 @@ const SideNav = ({ isCollapsed, onToggle }) => {
       </div>
       <ul className={styles['menu-list']}>
         <MenuItem to="/Adminhomepage" icon={<AiOutlineHome size={24} />} text="Home" collapsed={isCollapsed} />
-        {/* <MenuItem to="/profile" icon={<AiOutlineUser size={24} />} text="Profile" collapsed={isCollapsed} /> */}
         <MenuItem to="/Admininmatedetails" icon={<AiOutlineUsergroupAdd size={24} />} text="Inmate Details" collapsed={isCollapsed} />
         <MenuItem to="/Adminguestdetails" icon={<AiOutlineFileAdd size={24} />} text="Guest Check-in" collapsed={isCollapsed} />
         <MenuItem to="/Admincomplaints" icon={<AiOutlineExclamationCircle size={24} />} text="Complaint Registered" collapsed={isCollapsed} />
-        {/* <MenuItem to="/inmatecheckin" icon={<AiOutlineUsergroupAdd size={24} />} text="Inmate Check-in" collapsed={isCollapsed} /> */}
+        <MenuItem to="/adminannouncement" icon={<AiOutlineNotification size={24} />} text="Announcement" collapsed={isCollapsed} />
+        <MenuItem to="/adduser" icon={<AiOutlineUser size={24} />} text="Users" collapsed={isCollapsed} />
         <MenuItem to="/" icon={<AiOutlineLogin size={24} />} text="Logout" collapsed={isCollapsed} />
       </ul>
     </nav>
