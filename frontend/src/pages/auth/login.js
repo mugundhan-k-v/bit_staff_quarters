@@ -18,7 +18,7 @@ const LoginPage = () => {
     function start() {
       gapi.load('auth2', () => {
         gapi.auth2.init({
-          client_id: '4952283494-jggmf8d19jvo55kqrsd3s6ro5m5hvq2a.apps.googleusercontent.com',
+          client_id: 'your_google_client_id',
           scope: 'profile email',
         }).then(() => {
           console.log('Google Auth initialized');
