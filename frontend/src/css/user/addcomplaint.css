@@ -1,9 +1,17 @@
+
+/* addcomplaint.css */
 body {
     background-color: #F5F3FF;
    
     }
 
 .add-page {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+.content{
     display: flex;
     justify-content: center;
     align-items: center;

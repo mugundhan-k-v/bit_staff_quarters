@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import React, { useContext } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { FacultyProvider, FacultyContext } from './context/FacultyContext';
 import HomePage from './pages/user/HomePage';
-import ProfilePage from './pages/user/profile';
+import ProfilePage from './pages/user/userprofile';
 import InmateDetailsPage from './pages/user/inmatedetails';
 import AddInmatePage from './pages/user/addinmate';
 import GuestDetailsPage from './pages/user/guestdetails';
@@ -18,121 +19,45 @@ import AdminInmateDetailsPage from './pages/admin/admininmatedetails';
 import AdminGuestDetailsPage from './pages/admin/adminguestdetails';
 import AdminComplaintsPage from './pages/admin/admincomplaints';
 import UpdateComplaintPage from './pages/admin/updatecomplaint';
+import AdminAnnouncementPage from './pages/admin/AdminAnnouncementPage';
+import AddUserPage from './pages/admin/AddUserPage'; // Import the new page
+
+const ProtectedRoute = ({ element }) => {
+  const { isAuthenticated } = useContext(FacultyContext);
+  return isAuthenticated ? element : <Navigate to="/login" />;
+};
 
 function App() {
-    const [inmates, setInmates] = useState([]);
-    const [guests, setGuests] = useState([]);
-    const [complaints, setComplaints] = useState([]);
-    const [checkinDetails, setCheckinDetails] = useState([]);
-
-    const addInmate = (inmate) => {
-        setInmates(prevInmates => [...prevInmates, inmate]);
-    }
-
-    const addGuest = (guest) => {
-        setGuests(prevGuests => [...prevGuests, guest]);
-    }
-
-    const addComplaint = (complaint) => {
-        setComplaints(prevComplaints => [...prevComplaints, complaint]);
-    }
-
-    const addCheckin = (checkin) => {
-        setCheckinDetails(prevCheckinDetails => [...prevCheckinDetails, checkin]);
-    }
-    const inmatesData = [
-        {
-          name: 'John Doe',
-          relation: 'Son',
-          age: 22,
-          aadharNo: '1234-5678-9012',
-          working: 'Yes',
-          employer: 'Company ABC',
-          facultyId: 'FAC123'
-        },
-        {
-          name: 'Jane Doe',
-          relation: 'Daughter',
-          age: 19,
-          aadharNo: '9876-5432-1098',
-          working: 'No',
-          employer: '',
-          facultyId: 'FAC456'
-        },
-        {
-          name: 'Richard Roe',
-          relation: 'Father',
-          age: 50,
-          aadharNo: '2234-5678-9012',
-          working: 'Yes',
-          employer: 'XYZ Corp',
-          facultyId: 'FAC789'
-        }
-    ];
-
-    // Sample data for guests
-    const guestsData = [
-        {
-            guests: 2,
-            from: 'Namakkal',
-            checkIn: '2024-08-20',
-            checkOut: '2024-08-25',
-            facultyId: 'FAC12345',
-            code: 'GUEST001'
-        },
-        {
-            guests: 3,
-            from: 'Erode',
-            checkIn: '2024-08-18',
-            checkOut: '2024-08-22',
-            facultyId: 'FAC67890', 
-            code: 'GUEST002'
-        },
-        {
-            guests: 1,
-            from: 'Salem',
-            checkIn: '2024-08-19',
-            checkOut: '2024-08-20',
-            facultyId: 'FAC54321',
-            code: 'GUEST003'
-        },
-        {
-            guests: 1,
-            from: 'Salem',
-            checkIn: '2024-08-20',
-            checkOut: '2024-08-24',
-            facultyId: 'FAC54321',
-            code: 'GUEST004'
-        }
-    ];
-
-    return (
-        <Router>
-            <div className="App">
-                <Routes>
-                    <Route path="/homepage" element={<HomePage />} />
-                    <Route path="/Adminhomepage" element={<AdminHomePage />} />
-                    <Route path="/" element={<LoginPage />} />
-                    <Route path="/profile" element={<ProfilePage />} />
-                    <Route path="/inmatedetails" element={<InmateDetailsPage inmates={inmates} />} />
-                    <Route path="/addinmate" element={<AddInmatePage addInmate={addInmate} />} />
-                    <Route path="/guestdetails" element={<GuestDetailsPage guests={guests} />} />
-                    <Route path="/addguest" element={<AddGuestPage addGuest={addGuest} />} />
-                    <Route path="/complaints" element={<ComplaintsPage complaints={complaints} />} />
-                    <Route path="/addcomplaint" element={<AddComplaintPage addComplaint={addComplaint} />} />
-                    <Route path="/inmatecheckin" element={<InmateCheckinPage checkinDetails={checkinDetails} />} />
-                    <Route path="/addcheckin" element={<AddCheckinPage addCheckin={addCheckin} />} />
-                    <Route path="/announcement" element={<AnnouncementPage />} />
-                    <Route path="/Adminprofile" element={<AdminProfilePage />} />
-                    <Route path="/Admininmatedetails" element={<AdminInmateDetailsPage inmates={inmatesData} />} /> 
-                    <Route path="/Adminguestdetails" element={<AdminGuestDetailsPage guests={guestsData} />} />
-                    <Route path="/Admincomplaints" element={<AdminComplaintsPage />} />
-                    <Route path="/updatecomplaint" element={<UpdateComplaintPage />} />
-
-                </Routes>
-            </div>
-        </Router>
-    );
+  return (
+    <FacultyProvider>
+      <Router>
+        <div className="App">
+          <Routes>
+            <Route path="/" element={<LoginPage />} />
+            <Route path="/homepage" element={<ProtectedRoute element={<HomePage />} />} />
+            <Route path="/profile" element={<ProtectedRoute element={<ProfilePage />} />} />
+            <Route path="/inmatedetails" element={<ProtectedRoute element={<InmateDetailsPage />} />} />
+            <Route path="/addinmate" element={<ProtectedRoute element={<AddInmatePage />} />} />
+            <Route path="/guestdetails" element={<ProtectedRoute element={<GuestDetailsPage />} />} />
+            <Route path="/addguest" element={<ProtectedRoute element={<AddGuestPage />} />} />
+            <Route path="/complaints" element={<ProtectedRoute element={<ComplaintsPage />} />} />
+            <Route path="/addcomplaint" element={<ProtectedRoute element={<AddComplaintPage />} />} />
+            <Route path="/inmatecheckin" element={<ProtectedRoute element={<InmateCheckinPage />} />} />
+            <Route path="/addcheckin" element={<ProtectedRoute element={<AddCheckinPage />} />} />
+            <Route path="/announcement" element={<ProtectedRoute element={<AnnouncementPage />} />} />
+            <Route path="/Adminhomepage" element={<ProtectedRoute element={<AdminHomePage />} />} />
+            <Route path="/Adminprofile" element={<ProtectedRoute element={<AdminProfilePage />} />} />
+            <Route path="/Admininmatedetails" element={<ProtectedRoute element={<AdminInmateDetailsPage />} />} />
+            <Route path="/Adminguestdetails" element={<ProtectedRoute element={<AdminGuestDetailsPage />} />} />
+            <Route path="/Admincomplaints" element={<ProtectedRoute element={<AdminComplaintsPage />} />} />
+            <Route path="/updatecomplaint" element={<ProtectedRoute element={<UpdateComplaintPage />} />} />
+            <Route path="/adminannouncement" element={<ProtectedRoute element={<AdminAnnouncementPage />} />} />
+            <Route path="/adduser" element={<ProtectedRoute element={<AddUserPage />} />} /> {/* Add the new route */}
+          </Routes>
+        </div>
+      </Router>
+    </FacultyProvider>
+  );
 }
 
 export default App;

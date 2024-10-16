@@ -1,0 +1,191 @@
+body {
+  background-color: #F5F3FF;
+}
+
+.add-user-container {
+  height: 100vh;
+  padding: 30px 20px;
+  overflow-y: auto;
+  color: #080064;
+  background-color: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.add-user-container h1 {
+  margin-bottom: 20px;
+  color: #333;
+}
+
+.add-user-btn {
+  padding: 5px 10px; /* Reduced padding */
+  background-color: #5B4CFF;
+  color: #ffffff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  max-width: 80px; /* Reduced max-width */
+  margin-left: 10px;
+  margin-bottom: 20px;
+  transition: background-color 0.3s ease;
+  font-size: 14px; /* Reduced font size */
+}
+
+.add-user-btn:hover {
+  background-color: #3a3aff;
+}
+
+.user-list {
+  width: 100%;
+  max-width: 600px;
+  margin-bottom: 20px;
+}
+
+.user-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  margin-bottom: 10px;
+  background-color: #fff;
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+}
+
+.user-item p {
+  margin: 0;
+  color: #333;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 5px; /* Reduced gap */
+}
+
+.edit-btn,
+.delete-btn {
+  padding: 5px 8px; /* Reduced padding */
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  font-size: 14px; /* Reduced font size */
+  width: 30px; /* Reduced width */
+  height: 30px; /* Set height */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.edit-btn {
+  background-color: #28a745;
+  color: white;
+}
+
+.edit-btn:hover {
+  background-color: #218838;
+}
+
+.delete-btn {
+  background-color: #dc3545;
+  color: white;
+}
+
+.delete-btn:hover {
+  background-color: #c82333;
+}
+
+.form-popup {
+  position: fixed; /* Make the form pop up over the screen */
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000; /* Ensure it appears above other elements */
+}
+
+.form-container {
+  background-color: #fff;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 600px;
+}
+
+.add-user-form {
+  display: flex;
+  flex-direction: column;
+}
+
+.add-user-form label {
+  margin-bottom: 10px;
+  color: #333;
+}
+
+.add-user-form input,
+.add-user-form select {
+  padding: 10px;
+  margin-bottom: 10px;
+  border-radius: 10px;
+  border: 1px solid #ddd;
+  width: 100%;
+  box-sizing: border-box;
+  transition: border 0.3s ease;
+}
+
+.add-user-form input:focus,
+.add-user-form select:focus {
+  box-shadow: 0 0 5px #007bff;
+}
+
+.form-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px; /* Space between buttons */
+}
+
+.submit-btn {
+  padding: 10px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.submit-btn:hover {
+  background-color: #0056b3;
+}
+
+.cancel-btn {
+  padding: 10px;
+  background-color: #6c757d;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.cancel-btn:hover {
+  background-color: #5a6268;
+}
+
+@media (max-width: 900px) {
+  .form-container {
+    width: 70%;
+  }
+}
+
+@media (max-width: 480px) {
+  .form-container {
+    width: 90%;
+  }
+}
