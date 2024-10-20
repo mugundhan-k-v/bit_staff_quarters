@@ -2,15 +2,30 @@ const express = require('express');
 const router = express.Router();
 const { OAuth2Client } = require('google-auth-library');
 const User = require('../models/User');
-const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 const Complaint = require('../models/Complaint');
 const Guest = require('../models/Guest');
 const Inmate = require('../models/Inmate');
 const Profile = require('../models/Profile');
 const InmateCheckin = require('../models/InmateCheckin');
-const Announcement = require('../models/Announcement'); // Import the Announcement model
+const Announcement = require('../models/Announcement');
+const NodeCache = require('node-cache'); // Import NodeCache
 
+// Initialize cache
+const myCache = new NodeCache(); // Initialize your cache instance
 
+// Initialize Google OAuth2 client
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+
+// Middleware to check if user is authenticated
+function isAuthenticated(req, res, next) {
+  if (req.session.user) {
+    next();
+  } else {
+    return res.status(401).json({ message: 'Unauthorized' });
+  }
+}
+
+// LOGIN ROUTE (FACULTY)
 router.post('/login', async (req, res) => {
   const { facultyId, password } = req.body;
   console.log('Login attempt:', { facultyId });
@@ -22,93 +37,84 @@ router.post('/login', async (req, res) => {
       return res.status(400).json({ message: 'Invalid faculty ID or password' });
     }
 
-    const complaints = await Complaint.find({ facultyId });
-    const guests = await Guest.find({ facultyId });
-    const inmates = await Inmate.find({ facultyId });
-
-    console.log('Login successful for user:', facultyId);
-    res.status(200).json({
-      message: 'Login successful',
-      role: user.role,
-      data: {
-        complaints,
-        guests,
-        inmates,
-      }
-    });
+    // Store user information in session
+    req.session.user = { facultyId, role: user.role };
+    console.log('Login successful:', facultyId);
+    return res.status(200).json({ message: 'Login successful', role: user.role });
   } catch (err) {
     console.error('Error during login:', err.message);
-    res.status(500).json({ message: err.message });
+    return res.status(500).json({ message: err.message });
   }
 });
-// Google Login Route
+
+// GOOGLE LOGIN ROUTE
 router.post('/google-login', async (req, res) => {
   const { tokenId } = req.body;
 
   try {
-    // Verify Google token
     const ticket = await client.verifyIdToken({
       idToken: tokenId,
-      audience: process.env.GOOGLE_CLIENT_ID,  // Your Google client ID
+      audience: process.env.GOOGLE_CLIENT_ID,
     });
+    const { email } = ticket.getPayload();
 
-    const { email } = ticket.getPayload();  // Get the email from the token payload
-
-    // Check if user exists in your database by email
     const user = await User.findOne({ email });
-
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    // If user exists, return success
-    res.status(200).json({ facultyId: user.facultyId, role: user.role });
+    // Store user information in session
+    req.session.user = { facultyId: user.facultyId, role: user.role };
+    console.log('Google login successful:', user.facultyId);
+    return res.status(200).json({ facultyId: user.facultyId, role: user.role });
   } catch (error) {
     console.error('Error verifying Google token:', error.message);
-    res.status(500).json({ message: 'Internal Server Error' });
+    return res.status(500).json({ message: 'Internal Server Error' });
   }
 });
 
-// Create new user (Admin functionality to add users)
-router.post('/users', async (req, res) => {
+// CREATE USER (Admin role required)
+router.post('/users', isAuthenticated, async (req, res) => {
   const { facultyId, password, name, email, role } = req.body;
   console.log('Creating new user:', { facultyId, name, email });
-  try {
-    const newUser = new User({
-      facultyId,
-      password,
-      name,
-      email,
-      role
-    });
 
+  try {
+    const newUser = new User({ facultyId, password, name, email, role });
     const savedUser = await newUser.save();
+
     console.log('User created successfully:', savedUser);
-    res.status(201).json(savedUser);
+    return res.status(201).json(savedUser);
   } catch (err) {
     console.error('Error creating user:', err.message);
-    res.status(400).json({ message: err.message });
+    return res.status(400).json({ message: err.message });
   }
 });
 
-// Fetch all users
+// FETCH ALL USERS (Caching implemented)
 router.get('/users', async (req, res) => {
-  console.log('Fetching all users');
-  try {
-    const users = await User.find();
-    console.log('Users fetched successfully:', users.length);
-    res.json(users);
-  } catch (err) {
-    console.error('Error fetching users:', err.message);
-    res.status(500).json({ message: err.message });
+  const cacheKey = 'allUsers';
+  let users = myCache.get(cacheKey);
+
+  if (!users) {
+    try {
+      users = await User.find();
+      myCache.set(cacheKey, users);
+      console.log('Users fetched from DB and cached');
+    } catch (err) {
+      console.error('Error fetching users:', err.message);
+      return res.status(500).json({ message: err.message });
+    }
+  } else {
+    console.log('Users fetched from cache');
   }
+
+  return res.json(users);
 });
 
-// Update user by ID
-router.put('/users/:id', async (req, res) => {
+// UPDATE USER
+router.put('/users/:id', isAuthenticated, async (req, res) => {
   const { id } = req.params;
   const { facultyId, password, name, email, phone, quarters, role } = req.body;
-  console.log('Updating user:', { id, facultyId, name, email });
 
   try {
     const updatedUser = await User.findByIdAndUpdate(
@@ -116,20 +122,33 @@ router.put('/users/:id', async (req, res) => {
       { facultyId, password, name, email, phone, quarters, role },
       { new: true }
     );
+
     if (!updatedUser) {
       return res.status(404).json({ message: 'User not found' });
     }
-    console.log('User updated successfully:', updatedUser);
-    res.json(updatedUser);
+
+    myCache.del('allUsers'); // Invalidate cache
+    return res.json(updatedUser);
   } catch (err) {
     console.error('Error updating user:', err.message);
-    res.status(400).json({ message: err.message });
+    return res.status(400).json({ message: err.message });
   }
 });
 
-router.delete('/users/:id', async (req, res) => {
+router.post('/logout', (req, res) => {
+  req.session.destroy(err => {
+    if (err) {
+      console.error('Error during logout:', err.message);
+      return res.status(500).json({ message: 'Error logging out' });
+    }
+    res.clearCookie('userToken'); // Clear the cookie
+    return res.status(200).json({ message: 'Logout successful' });
+  });
+});
+
+// DELETE USER
+router.delete('/users/:id', isAuthenticated, async (req, res) => {
   const { id } = req.params;
-  console.log('Deleting user:', { id });
 
   try {
     const user = await User.findById(id);
@@ -137,19 +156,21 @@ router.delete('/users/:id', async (req, res) => {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    // Manually call the pre-remove middleware
+    // Clean up related data
     await Complaint.deleteMany({ facultyId: user.facultyId });
     await Guest.deleteMany({ facultyId: user.facultyId });
     await Inmate.deleteMany({ facultyId: user.facultyId });
     await Profile.deleteMany({ facultyId: user.facultyId });
     await InmateCheckin.deleteMany({ facultyId: user.facultyId });
 
-    await User.deleteOne({ _id: id }); // Use deleteOne on the model
+    await User.deleteOne({ _id: id });
+    myCache.del('allUsers'); // Invalidate cache
+
     console.log('User deleted successfully:', user);
-    res.status(200).json({ message: 'User deleted successfully' });
+    return res.status(200).json({ message: 'User deleted successfully' });
   } catch (err) {
     console.error('Error deleting user:', err.message);
-    res.status(500).json({ message: err.message });
+    return res.status(500).json({ message: err.message });
   }
 });
 

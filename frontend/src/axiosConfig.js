@@ -1,9 +1,8 @@
-// frontend/src/axiosConfig.js
 import axios from 'axios';
 
-const axiosInstance = axios.create({
+const instance = axios.create({
   baseURL: 'http://localhost:5000/api',
-  withCredentials: true, // Include cookies with requests
+  withCredentials: true, // Ensure credentials are sent with each request
 });
 
-export default axiosInstance;
+export default instance;

@@ -2,6 +2,8 @@ const express = require('express');
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 const cors = require('cors');
+const session = require('express-session');
+const MongoDBStore = require('connect-mongodb-session')(session);
 const apiRoutes = require('./routes/api'); // Import your API routes
 
 dotenv.config();
@@ -18,6 +20,24 @@ app.use(cors({
   credentials: true
 }));
 
+// MongoDB connection for session storage
+const store = new MongoDBStore({
+  uri: process.env.MONGO_URI,
+  collection: 'sessions' // Collection to store sessions
+});
+
+// Session
+app.use(session({
+  secret: process.env.SESSION_SECRET, // Replace with your own secret
+  resave: false,
+  saveUninitialized: false,
+  store: store,
+  cookie: {
+    maxAge: 1000 * 60 * 60 * 0.25, // Session valid for 1 day
+    httpOnly: true, // Ensure the cookie is only accessible by the web server
+    secure: false // Ensure the cookie is used over HTTP in development
+  }
+}));
 // Connect to MongoDB
 mongoose.connect(process.env.MONGO_URI, {
   useNewUrlParser: true,
@@ -31,7 +51,7 @@ db.on('error', (error) => {
 db.once('open', () => console.log('Connected to MongoDB'));
 
 // API Routes
-app.use('/api', apiRoutes);
+app.use('/api', apiRoutes); // Ensure this line is present
 
 // Global error handler
 app.use((err, req, res, next) => {
