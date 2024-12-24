@@ -103,12 +103,7 @@ const LoginPage = () => {
           localStorage.setItem('isAuthenticated', 'true');
           localStorage.setItem('loginTime', loginTime);
           localStorage.setItem('sessionExpiryTime', sessionExpiryTime); // Store expiry time
-          sessionStorage.setItem('userRole', role); // Store user role
-          sessionStorage.setItem('facultyId', facultyId);
-          sessionStorage.setItem('isAuthenticated', 'true');
-          sessionStorage.setItem('loginTime', loginTime);
-          sessionStorage.setItem('sessionExpiryTime', sessionExpiryTime); // Store expiry time
-          sessionStorage.setItem('userRole', role); 
+          localStorage.setItem('userRole', role); // Store user role
 
           // Navigate based on the role
           if (role === 'Admin') {

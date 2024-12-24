@@ -9,7 +9,9 @@ const AdminGuestDetailsPage = ({ sidebarCollapsed }) => {
     // Fetch guest data from the backend
     const fetchGuests = async () => {
       try {
-        const response = await fetch('http://localhost:5000/api/allguests');
+        const response = await fetch('http://localhost:5000/api/allguests', {
+          credentials: 'include' // Include credentials in the request
+        });
         if (!response.ok) {
           throw new Error('Failed to fetch guests');
         }
@@ -65,7 +67,7 @@ const AdminGuestDetailsPage = ({ sidebarCollapsed }) => {
               <tbody>
                 {filteredGuests.map((guest, index) => (
                   <tr key={index}>
-                    <td>{guest.guests}</td>
+                    <td>{Array.isArray(guest.guests) ? guest.guests.join(', ') : guest.guests}</td>
                     <td>{guest.from}</td>
                     <td>{guest.checkIn}</td>
                     <td>{guest.checkOut}</td>

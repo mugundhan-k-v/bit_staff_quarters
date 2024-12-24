@@ -1,31 +1,54 @@
 const express = require('express');
 const router = express.Router();
-const { OAuth2Client } = require('google-auth-library');
 const User = require('../models/User');
 const Complaint = require('../models/Complaint');
 const Guest = require('../models/Guest');
 const Inmate = require('../models/Inmate');
 const Profile = require('../models/Profile');
-const InmateCheckin = require('../models/InmateCheckin');
 const Announcement = require('../models/Announcement');
-const NodeCache = require('node-cache'); // Import NodeCache
+const InmateCheckin = require('../models/InmateCheckin');
+const NodeCache = require('node-cache');
+const { OAuth2Client } = require('google-auth-library');
+const client = new OAuth2Client('4952283494-jggmf8d19jvo55kqrsd3s6ro5m5hvq2a.apps.googleusercontent.com');
+
 
 // Initialize cache
-const myCache = new NodeCache(); // Initialize your cache instance
+const myCache = new NodeCache();
 
-// Initialize Google OAuth2 client
-const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
-// Middleware to check if user is authenticated
-function isAuthenticated(req, res, next) {
-  if (req.session.user) {
-    next();
-  } else {
-    return res.status(401).json({ message: 'Unauthorized' });
+// Google Login Route
+router.post('/google-login', async (req, res) => {
+  const { tokenId } = req.body;
+
+  try {
+    const ticket = await client.verifyIdToken({
+      idToken: tokenId,
+      audience: '4952283494-jggmf8d19jvo55kqrsd3s6ro5m5hvq2a.apps.googleusercontent.com',
+    });
+
+    const payload = ticket.getPayload();
+    const { sub, email, name } = payload;
+
+    let user = await User.findOne({ email });
+
+    if (!user) {
+      // Create a new user if not found
+      user = new User({
+        facultyId: sub,
+        email,
+        name,
+        role: 'User', // Default role
+      });
+      await user.save();
+    }
+
+    res.status(200).json({ facultyId: user.facultyId, role: user.role });
+  } catch (error) {
+    console.error('Error during Google Sign-In:', error.message);
+    res.status(500).json({ message: 'Google Sign-In failed' });
   }
-}
-
-// LOGIN ROUTE (FACULTY)
+});
+// LOGIN ROUTE (Removed session logic)
 router.post('/login', async (req, res) => {
   const { facultyId, password } = req.body;
   console.log('Login attempt:', { facultyId });
@@ -37,8 +60,6 @@ router.post('/login', async (req, res) => {
       return res.status(400).json({ message: 'Invalid faculty ID or password' });
     }
 
-    // Store user information in session
-    req.session.user = { facultyId, role: user.role };
     console.log('Login successful:', facultyId);
     return res.status(200).json({ message: 'Login successful', role: user.role });
   } catch (err) {
@@ -47,50 +68,22 @@ router.post('/login', async (req, res) => {
   }
 });
 
-// GOOGLE LOGIN ROUTE
-router.post('/google-login', async (req, res) => {
-  const { tokenId } = req.body;
+// CREATE USER
+router.post('/users', async (req, res) => {
+  const { facultyId, password, name, email, phone, quarters, role } = req.body;
 
   try {
-    const ticket = await client.verifyIdToken({
-      idToken: tokenId,
-      audience: process.env.GOOGLE_CLIENT_ID,
-    });
-    const { email } = ticket.getPayload();
-
-    const user = await User.findOne({ email });
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' });
-    }
-
-    // Store user information in session
-    req.session.user = { facultyId: user.facultyId, role: user.role };
-    console.log('Google login successful:', user.facultyId);
-    return res.status(200).json({ facultyId: user.facultyId, role: user.role });
+    const user = new User({ facultyId, password, name, email, phone, quarters, role });
+    await user.save();
+    myCache.del('allUsers'); // Invalidate cache
+    res.status(201).json(user);
   } catch (error) {
-    console.error('Error verifying Google token:', error.message);
-    return res.status(500).json({ message: 'Internal Server Error' });
+    console.error('Error creating user:', error);
+    res.status(500).send('Internal Server Error');
   }
 });
 
-// CREATE USER (Admin role required)
-router.post('/users', isAuthenticated, async (req, res) => {
-  const { facultyId, password, name, email, role } = req.body;
-  console.log('Creating new user:', { facultyId, name, email });
-
-  try {
-    const newUser = new User({ facultyId, password, name, email, role });
-    const savedUser = await newUser.save();
-
-    console.log('User created successfully:', savedUser);
-    return res.status(201).json(savedUser);
-  } catch (err) {
-    console.error('Error creating user:', err.message);
-    return res.status(400).json({ message: err.message });
-  }
-});
-
-// FETCH ALL USERS (Caching implemented)
+// FETCH ALL USERS
 router.get('/users', async (req, res) => {
   const cacheKey = 'allUsers';
   let users = myCache.get(cacheKey);
@@ -112,7 +105,7 @@ router.get('/users', async (req, res) => {
 });
 
 // UPDATE USER
-router.put('/users/:id', isAuthenticated, async (req, res) => {
+router.put('/users/:id', async (req, res) => {
   const { id } = req.params;
   const { facultyId, password, name, email, phone, quarters, role } = req.body;
 
@@ -135,19 +128,8 @@ router.put('/users/:id', isAuthenticated, async (req, res) => {
   }
 });
 
-router.post('/logout', (req, res) => {
-  req.session.destroy(err => {
-    if (err) {
-      console.error('Error during logout:', err.message);
-      return res.status(500).json({ message: 'Error logging out' });
-    }
-    res.clearCookie('userToken'); // Clear the cookie
-    return res.status(200).json({ message: 'Logout successful' });
-  });
-});
-
 // DELETE USER
-router.delete('/users/:id', isAuthenticated, async (req, res) => {
+router.delete('/users/:id', async (req, res) => {
   const { id } = req.params;
 
   try {
@@ -173,6 +155,13 @@ router.delete('/users/:id', isAuthenticated, async (req, res) => {
     return res.status(500).json({ message: err.message });
   }
 });
+
+// LOGOUT ROUTE (Removed session handling)
+router.post('/logout', (req, res) => {
+  console.log('Logout successful');
+  return res.status(200).json({ message: 'Logout successful' });
+});
+
 
 // Fetch all inmates
 router.get('/allinmates', async (req, res) => {
