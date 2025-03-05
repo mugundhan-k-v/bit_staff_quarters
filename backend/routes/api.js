@@ -1,16 +1,57 @@
 const express = require('express');
 const router = express.Router();
-const { OAuth2Client } = require('google-auth-library');
+const multer = require('multer');
+const path = require('path');
 const User = require('../models/User');
-const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 const Complaint = require('../models/Complaint');
 const Guest = require('../models/Guest');
 const Inmate = require('../models/Inmate');
 const Profile = require('../models/Profile');
+const Announcement = require('../models/Announcement');
 const InmateCheckin = require('../models/InmateCheckin');
-const Announcement = require('../models/Announcement'); // Import the Announcement model
+const NodeCache = require('node-cache');
+const { OAuth2Client } = require('google-auth-library');
+const client = new OAuth2Client('4952283494-jggmf8d19jvo55kqrsd3s6ro5m5hvq2a.apps.googleusercontent.com');
 
+// Initialize cache
+const myCache = new NodeCache();
 
+const storage = multer.memoryStorage();
+const upload = multer({ storage });
+
+// Google Login Route
+router.post('/google-login', async (req, res) => {
+  const { tokenId } = req.body;
+
+  try {
+    const ticket = await client.verifyIdToken({
+      idToken: tokenId,
+      audience: '4952283494-jggmf8d19jvo55kqrsd3s6ro5m5hvq2a.apps.googleusercontent.com',
+    });
+
+    const payload = ticket.getPayload();
+    const { sub, email, name } = payload;
+
+    let user = await User.findOne({ email });
+
+    if (!user) {
+      // Create a new user if not found
+      user = new User({
+        facultyId: sub,
+        email,
+        name,
+        role: 'User', // Default role
+      });
+      await user.save();
+    }
+
+    res.status(200).json({ facultyId: user.facultyId, role: user.role });
+  } catch (error) {
+    console.error('Error during Google Sign-In:', error.message);
+    res.status(500).json({ message: 'Google Sign-In failed' });
+  }
+});
+// LOGIN ROUTE (Removed session logic)
 router.post('/login', async (req, res) => {
   const { facultyId, password } = req.body;
   console.log('Login attempt:', { facultyId });
@@ -22,93 +63,54 @@ router.post('/login', async (req, res) => {
       return res.status(400).json({ message: 'Invalid faculty ID or password' });
     }
 
-    const complaints = await Complaint.find({ facultyId });
-    const guests = await Guest.find({ facultyId });
-    const inmates = await Inmate.find({ facultyId });
-
-    console.log('Login successful for user:', facultyId);
-    res.status(200).json({
-      message: 'Login successful',
-      role: user.role,
-      data: {
-        complaints,
-        guests,
-        inmates,
-      }
-    });
+    console.log('Login successful:', facultyId);
+    return res.status(200).json({ message: 'Login successful', role: user.role });
   } catch (err) {
     console.error('Error during login:', err.message);
-    res.status(500).json({ message: err.message });
-  }
-});
-// Google Login Route
-router.post('/google-login', async (req, res) => {
-  const { tokenId } = req.body;
-
-  try {
-    // Verify Google token
-    const ticket = await client.verifyIdToken({
-      idToken: tokenId,
-      audience: process.env.GOOGLE_CLIENT_ID,  // Your Google client ID
-    });
-
-    const { email } = ticket.getPayload();  // Get the email from the token payload
-
-    // Check if user exists in your database by email
-    const user = await User.findOne({ email });
-
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' });
-    }
-
-    // If user exists, return success
-    res.status(200).json({ facultyId: user.facultyId, role: user.role });
-  } catch (error) {
-    console.error('Error verifying Google token:', error.message);
-    res.status(500).json({ message: 'Internal Server Error' });
+    return res.status(500).json({ message: err.message });
   }
 });
 
-// Create new user (Admin functionality to add users)
+// CREATE USER
 router.post('/users', async (req, res) => {
-  const { facultyId, password, name, email, role } = req.body;
-  console.log('Creating new user:', { facultyId, name, email });
-  try {
-    const newUser = new User({
-      facultyId,
-      password,
-      name,
-      email,
-      role
-    });
+  const { facultyId, password, name, email, phone, quarters, role } = req.body;
 
-    const savedUser = await newUser.save();
-    console.log('User created successfully:', savedUser);
-    res.status(201).json(savedUser);
-  } catch (err) {
-    console.error('Error creating user:', err.message);
-    res.status(400).json({ message: err.message });
+  try {
+    const user = new User({ facultyId, password, name, email, phone, quarters, role });
+    await user.save();
+    myCache.del('allUsers'); // Invalidate cache
+    res.status(201).json(user);
+  } catch (error) {
+    console.error('Error creating user:', error);
+    res.status(500).send('Internal Server Error');
   }
 });
 
-// Fetch all users
+// FETCH ALL USERS
 router.get('/users', async (req, res) => {
-  console.log('Fetching all users');
-  try {
-    const users = await User.find();
-    console.log('Users fetched successfully:', users.length);
-    res.json(users);
-  } catch (err) {
-    console.error('Error fetching users:', err.message);
-    res.status(500).json({ message: err.message });
+  const cacheKey = 'allUsers';
+  let users = myCache.get(cacheKey);
+
+  if (!users) {
+    try {
+      users = await User.find();
+      myCache.set(cacheKey, users);
+      console.log('Users fetched from DB and cached');
+    } catch (err) {
+      console.error('Error fetching users:', err.message);
+      return res.status(500).json({ message: err.message });
+    }
+  } else {
+    console.log('Users fetched from cache');
   }
+
+  return res.json(users);
 });
 
-// Update user by ID
+// UPDATE USER
 router.put('/users/:id', async (req, res) => {
   const { id } = req.params;
   const { facultyId, password, name, email, phone, quarters, role } = req.body;
-  console.log('Updating user:', { id, facultyId, name, email });
 
   try {
     const updatedUser = await User.findByIdAndUpdate(
@@ -116,20 +118,22 @@ router.put('/users/:id', async (req, res) => {
       { facultyId, password, name, email, phone, quarters, role },
       { new: true }
     );
+
     if (!updatedUser) {
       return res.status(404).json({ message: 'User not found' });
     }
-    console.log('User updated successfully:', updatedUser);
-    res.json(updatedUser);
+
+    myCache.del('allUsers'); // Invalidate cache
+    return res.json(updatedUser);
   } catch (err) {
     console.error('Error updating user:', err.message);
-    res.status(400).json({ message: err.message });
+    return res.status(400).json({ message: err.message });
   }
 });
 
+// DELETE USER
 router.delete('/users/:id', async (req, res) => {
   const { id } = req.params;
-  console.log('Deleting user:', { id });
 
   try {
     const user = await User.findById(id);
@@ -137,21 +141,30 @@ router.delete('/users/:id', async (req, res) => {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    // Manually call the pre-remove middleware
+    // Clean up related data
     await Complaint.deleteMany({ facultyId: user.facultyId });
     await Guest.deleteMany({ facultyId: user.facultyId });
     await Inmate.deleteMany({ facultyId: user.facultyId });
     await Profile.deleteMany({ facultyId: user.facultyId });
     await InmateCheckin.deleteMany({ facultyId: user.facultyId });
 
-    await User.deleteOne({ _id: id }); // Use deleteOne on the model
+    await User.deleteOne({ _id: id });
+    myCache.del('allUsers'); // Invalidate cache
+
     console.log('User deleted successfully:', user);
-    res.status(200).json({ message: 'User deleted successfully' });
+    return res.status(200).json({ message: 'User deleted successfully' });
   } catch (err) {
     console.error('Error deleting user:', err.message);
-    res.status(500).json({ message: err.message });
+    return res.status(500).json({ message: err.message });
   }
 });
+
+// LOGOUT ROUTE (Removed session handling)
+router.post('/logout', (req, res) => {
+  console.log('Logout successful');
+  return res.status(200).json({ message: 'Logout successful' });
+});
+
 
 // Fetch all inmates
 router.get('/allinmates', async (req, res) => {
@@ -274,7 +287,7 @@ router.get('/complaints/:id', async (req, res) => {
     res.json(complaint);
   } catch (err) {
     console.error('Error fetching complaint:', err.message);
-    res.status(500).json({ message: err.message });
+    res.status(500).json({ message: 'Internal server error' });
   }
 });
 
@@ -282,19 +295,26 @@ router.get('/complaints/:id', async (req, res) => {
 router.put('/complaints/:id', async (req, res) => {
   const { id } = req.params;
   const { status } = req.body;
+
   try {
+    if (!['Pending', 'Resolved', 'Rejected', 'In Progress'].includes(status)) {
+      return res.status(400).json({ message: 'Invalid status value' });
+    }
+
     const complaint = await Complaint.findByIdAndUpdate(
       id,
       { status },
       { new: true }
     );
+
     if (!complaint) {
       return res.status(404).json({ message: 'Complaint not found' });
     }
+
     res.json(complaint);
   } catch (err) {
     console.error('Error updating complaint status:', err.message);
-    res.status(500).json({ message: err.message });
+    res.status(500).json({ message: 'Internal server error' });
   }
 });
 
@@ -308,13 +328,15 @@ router.get('/complaints-stats', async (req, res) => {
       counts.categories[category] = await Complaint.countDocuments({ category });
     }
 
-    counts.status.Registered = await Complaint.countDocuments();
+    counts.status.Total = await Complaint.countDocuments();
     counts.status.Resolved = await Complaint.countDocuments({ status: 'Resolved' });
     counts.status.InProgress = await Complaint.countDocuments({ status: 'In Progress' });
+    counts.status.Pending = await Complaint.countDocuments({ status: 'Pending' });
+    counts.status.Rejected = await Complaint.countDocuments({ status: 'Rejected' });
 
     res.json(counts);
   } catch (error) {
-    console.error('Error fetching complaint statistics:', error);
+    console.error('Error fetching complaint statistics:', error.message);
     res.status(500).json({ message: 'Internal server error' });
   }
 });
@@ -326,7 +348,7 @@ router.get('/recent-complaints', async (req, res) => {
     res.status(200).json(recentComplaints);
   } catch (err) {
     console.error('Error fetching recent complaints:', err.message);
-    res.status(500).json({ message: err.message });
+    res.status(500).json({ message: 'Internal server error' });
   }
 });
 
@@ -338,7 +360,7 @@ router.get('/allcomplaints', async (req, res) => {
     res.json(complaints);
   } catch (err) {
     console.error('Error fetching complaints:', err.message);
-    res.status(500).json({ message: err.message });
+    res.status(500).json({ message: 'Internal server error' });
   }
 });
 
@@ -347,21 +369,34 @@ router.get('/complaints', async (req, res) => {
   const { facultyId } = req.query;
   try {
     if (!facultyId) {
-      throw new Error('Faculty ID is required');
+      return res.status(400).json({ message: 'Faculty ID is required' });
     }
+
     const complaints = await Complaint.find({ facultyId });
     console.log(`Found ${complaints.length} complaints for faculty ID: ${facultyId}`);
     res.json(complaints);
   } catch (err) {
     console.error('Error fetching complaints:', err.message);
-    res.status(500).json({ message: err.message });
+    res.status(500).json({ message: 'Internal server error' });
   }
 });
 
-// Add a new complaint
-router.post('/complaints', async (req, res) => {
-  const { facultyId, category, quarters, description, status, createdAt } = req.body;
-  console.log('Adding new complaint:', { facultyId, description });
+// Add a new complaint with file upload
+router.post('/complaints', upload.single('proof'), async (req, res) => {
+  const { facultyId, category, quarters, description } = req.body;
+
+  // Validate input fields
+  if (!facultyId || !category || !quarters || !description) {
+    return res.status(400).json({ message: 'All fields are required' });
+  }
+
+  if (!['Plumbing', 'Carpentry', 'Electrical', 'Gardening', 'Others'].includes(category)) {
+    return res.status(400).json({ message: 'Invalid category value' });
+  }
+
+  const proof = req.file
+    ? { data: req.file.buffer.toString('base64'), contentType: req.file.mimetype }
+    : null;
 
   try {
     const newComplaint = new Complaint({
@@ -369,16 +404,15 @@ router.post('/complaints', async (req, res) => {
       category,
       quarters,
       description,
-      status,
-      createdAt
+      status: 'Pending',
+      proof,
     });
 
     const savedComplaint = await newComplaint.save();
-    console.log('Complaint added successfully:', savedComplaint);
     res.status(201).json(savedComplaint);
   } catch (err) {
     console.error('Error adding complaint:', err.message);
-    res.status(500).json({ message: err.message });
+    res.status(500).json({ message: 'Internal server error' });
   }
 });
 
@@ -454,16 +488,6 @@ router.post('/inmatecheckins', async (req, res) => {
   }
 });
 
-// Fetch all complaints
-router.get('/allcomplaints', async (req, res) => {
-  try {
-    const complaints = await Complaint.find();
-    res.status(200).json(complaints);
-  } catch (err) {
-    console.error('Error fetching all complaints:', err.message);
-    res.status(500).json({ message: err.message });
-  }
-});
 
 // Fetch all inmates
 router.get('/allinmates', async (req, res) => {

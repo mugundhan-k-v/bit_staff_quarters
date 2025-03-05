@@ -38,7 +38,7 @@ const AdminHomePage = () => {
     // Fetch category and status counts from the API
     const fetchCounts = async () => {
       try {
-        const response = await fetch('http://localhost:5000/api/complaints-stats'); // Adjust the API endpoint as needed
+        const response = await fetch('http://localhost:5000/api/complaints-stats');
         const data = await response.json();
         setCategoryCounts(data.categories);
         setStatusCounts(data.status);
@@ -109,7 +109,7 @@ const AdminHomePage = () => {
           <div className="counts-container">
             <div className="count-item1">
               <h3 className="count-item">Total Registered</h3>
-              <p className="count-item">{statusCounts.Registered}</p>
+              <p className="count-item">{statusCounts.Total}</p>
             </div>
             <div className="count-item2">
               <h3 className="count-item">Total In   Progress</h3>

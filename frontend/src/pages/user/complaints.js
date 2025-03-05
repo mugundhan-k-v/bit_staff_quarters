@@ -11,43 +11,43 @@ const ComplaintsDetailsPage = ({ sidebarCollapsed }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [selectedComplaint, setSelectedComplaint] = useState(null);
 
   useEffect(() => {
-    console.log("Faculty ID:", facultyId);  // Check the value of facultyId
     const fetchComplaints = async () => {
       try {
-        const response = await fetch(`http://localhost:5000/api/complaints?facultyId=${facultyId}`, {
-          headers: {
-            'Cache-Control': 'no-cache',
-            'Pragma': 'no-cache',
-            'Expires': '0'
+        const response = await fetch(
+          `http://localhost:5000/api/complaints?facultyId=${facultyId}`,
+          {
+            headers: {
+              'Cache-Control': 'no-cache',
+              Pragma: 'no-cache',
+              Expires: '0',
+            },
           }
-        });
-        const contentType = response.headers.get("content-type");
-        console.log('Response content type:', contentType); // Log the content type
+        );
+
         if (!response.ok) {
           const errorText = await response.text();
           throw new Error(`Invalid response: ${errorText}`);
         }
-        if (!contentType.includes("application/json")) {
-          throw new Error("Invalid response: Expected JSON but received HTML");
-        }
+
         const data = await response.json();
-        console.log('Fetched complaints data:', data); // Log the fetched data
         setComplaints(data);
         setLoading(false);
-      } catch (error) {
-        console.error('Error fetching complaint data:', error);
-        setError('Error fetching complaint data.');
+      } catch (err) {
+        console.error('Error fetching complaints:', err);
+        setError('Failed to fetch complaints. Please try again later.');
         setLoading(false);
       }
     };
+
     if (facultyId) {
       fetchComplaints();
     }
   }, [facultyId]);
 
-  const filteredComplaints = complaints.filter(complaint =>
+  const filteredComplaints = complaints.filter((complaint) =>
     complaint.description?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
@@ -55,9 +55,19 @@ const ComplaintsDetailsPage = ({ sidebarCollapsed }) => {
     navigate('/addcomplaint');
   };
 
+  const handleViewClick = (complaint) => {
+    setSelectedComplaint(complaint);
+  };
+
+  const handleCloseModal = () => {
+    setSelectedComplaint(null);
+  };
+
   return (
     <PageLayout>
-      <div className={`details-page ${sidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
+      <div
+        className={`details-page ${sidebarCollapsed ? 'sidebar-collapsed' : ''}`}
+      >
         <div className="details-content">
           <h1>Complaint Details</h1>
           <div className="search-bar">
@@ -65,7 +75,7 @@ const ComplaintsDetailsPage = ({ sidebarCollapsed }) => {
               type="text"
               placeholder="Search..."
               value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
+              onChange={(e) => setSearchQuery(e.target.value)}
             />
             <button className="add-button" onClick={handleAddClick}>
               Add <strong>+</strong>
@@ -82,6 +92,7 @@ const ComplaintsDetailsPage = ({ sidebarCollapsed }) => {
                     <th>Category</th>
                     <th>Description</th>
                     <th>Status</th>
+                    <th>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -91,6 +102,13 @@ const ComplaintsDetailsPage = ({ sidebarCollapsed }) => {
                         <td>{complaint.category}</td>
                         <td>{complaint.description}</td>
                         <td>{complaint.status}</td>
+                        <td>
+                          <button
+                            onClick={() => handleViewClick(complaint)}
+                          >
+                            View
+                          </button>
+                        </td>
                       </tr>
                     ))
                   ) : (
@@ -104,6 +122,57 @@ const ComplaintsDetailsPage = ({ sidebarCollapsed }) => {
           )}
         </div>
       </div>
+
+      {selectedComplaint && (
+        <div className="modal">
+          <div className="modal-content">
+            <span className="close" onClick={handleCloseModal}>
+              &times;
+            </span>
+            <h2>Complaint Details</h2>
+            <p>
+              <strong>Category:</strong> {selectedComplaint.category}
+            </p>
+            <p>
+              <strong>Description:</strong> {selectedComplaint.description}
+            </p>
+            <p>
+              <strong>Status:</strong> {selectedComplaint.status}
+            </p>
+            {selectedComplaint.proof && (
+              <div>
+                <h3>Proof:</h3>
+                {selectedComplaint.proof.contentType.startsWith('image/') ? (
+                  <img
+                    src={`data:${selectedComplaint.proof.contentType};base64,${selectedComplaint.proof.data}`}
+                    alt="Proof"
+                    style={{ maxWidth: '100%', maxHeight: '300px' }}
+                  />
+                ) : selectedComplaint.proof.contentType.startsWith('video/') ? (
+                  <video
+                    controls
+                    style={{ maxWidth: '100%' }}
+                  >
+                    <source
+                      src={`data:${selectedComplaint.proof.contentType};base64,${selectedComplaint.proof.data}`}
+                      type={selectedComplaint.proof.contentType}
+                    />
+                    Your browser does not support the video tag.
+                  </video>
+                ) : (
+                  <a
+                    href={`data:${selectedComplaint.proof.contentType};base64,${selectedComplaint.proof.data}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Download Proof
+                  </a>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </PageLayout>
   );
 };

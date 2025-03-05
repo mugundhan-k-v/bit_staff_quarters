@@ -51,7 +51,7 @@ const GuestsDetailsPage = ({ sidebarCollapsed }) => {
   );
 
   const handleAddClick = () => {
-    navigate('/addguest');
+    navigate('/addguests');
   };
 
   return (

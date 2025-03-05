@@ -1,4 +1,4 @@
-import React, { useState, useContext, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { FacultyContext } from '../../context/FacultyContext';
@@ -6,19 +6,22 @@ import '../../css/login.css';
 import { gapi } from 'gapi-script';
 
 const LoginPage = () => {
-  const [facultyId, setFacultyId] = useState('');
+  const [facultyIdInput, setFacultyIdInput] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const navigate = useNavigate();
-  const { setFacultyId: setGlobalFacultyId, setIsAuthenticated } = useContext(FacultyContext);
+  
+  const { setFacultyId, setIsAuthenticated } = useContext(FacultyContext);
 
-  // Initialize the Google API client on component mount
+  const SESSION_DURATION = 0.25 * 60 * 60 * 1000; // 3 hours in milliseconds
+
+  // Google Auth setup
   useEffect(() => {
     function start() {
       gapi.load('auth2', () => {
         gapi.auth2.init({
-          client_id: 'your_google_client_id',
+          client_id: '4952283494-jggmf8d19jvo55kqrsd3s6ro5m5hvq2a.apps.googleusercontent.com', 
           scope: 'profile email',
         }).then(() => {
           console.log('Google Auth initialized');
@@ -34,26 +37,42 @@ const LoginPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (facultyId === '' || password === '') {
+    if (facultyIdInput === '' || password === '') {
       setError('Faculty ID and password are required.');
       setSuccess('');
       return;
     }
 
     try {
-      const response = await axios.post('http://localhost:5000/api/login', { facultyId, password });
-      setSuccess(response.data.message);
-      setError('');
+      const response = await axios.post('http://localhost:5000/api/login', {
+        facultyId: facultyIdInput,
+        password
+      });
 
-      // Set the global facultyId and authentication state
-      setGlobalFacultyId(facultyId);
-      setIsAuthenticated(true);
+      if (response.data.message) {
+        setSuccess(response.data.message);
+        setError('');
+        
+        // Set the context values
+        setFacultyId(facultyIdInput); // Set facultyId in context
+        setIsAuthenticated(true); // Mark user as authenticated
 
-      // Navigate to the appropriate page based on the role
-      if (response.data.role === 'Admin') {
-        navigate('/Adminhomepage');
-      } else if (response.data.role === 'User') {
-        navigate('/homepage');
+        // Store session data in localStorage with a timestamp
+        const loginTime = new Date().getTime(); 
+        const sessionExpiryTime = loginTime + SESSION_DURATION; // Set session expiration time
+
+        localStorage.setItem('facultyId', facultyIdInput);
+        localStorage.setItem('isAuthenticated', 'true');
+        localStorage.setItem('loginTime', loginTime);
+        localStorage.setItem('sessionExpiryTime', sessionExpiryTime); // Store expiry time
+        localStorage.setItem('userRole', response.data.role); // Store user role
+
+        // Navigate based on the role
+        if (response.data.role === 'Admin') {
+          navigate('/adminhomepage'); // Redirect admin
+        } else {
+          navigate('/homepage'); // Redirect user
+        }
       }
     } catch (error) {
       setError('Invalid faculty ID or password.');
@@ -72,14 +91,24 @@ const LoginPage = () => {
           const res = await axios.post('http://localhost:5000/api/google-login', { tokenId });
           const { facultyId, role } = res.data;
 
-          // Set the global facultyId and authentication state
-          setGlobalFacultyId(facultyId);
+          // Set the context values
+          setFacultyId(facultyId);
           setIsAuthenticated(true);
 
-          // Navigate to the appropriate page based on the role
+          // Store session data in localStorage
+          const loginTime = new Date().getTime();
+          const sessionExpiryTime = loginTime + SESSION_DURATION;
+
+          localStorage.setItem('facultyId', facultyId);
+          localStorage.setItem('isAuthenticated', 'true');
+          localStorage.setItem('loginTime', loginTime);
+          localStorage.setItem('sessionExpiryTime', sessionExpiryTime); // Store expiry time
+          localStorage.setItem('userRole', role); // Store user role
+
+          // Navigate based on the role
           if (role === 'Admin') {
-            navigate('/Adminhomepage');
-          } else if (role === 'User') {
+            navigate('/adminhomepage');
+          } else {
             navigate('/homepage');
           }
         } catch (error) {
@@ -107,8 +136,8 @@ const LoginPage = () => {
           <input
             type="text"
             id="facultyId"
-            value={facultyId}
-            onChange={(e) => setFacultyId(e.target.value)}
+            value={facultyIdInput}
+            onChange={(e) => setFacultyIdInput(e.target.value)}
             placeholder="Enter your Faculty ID"
           />
         </div>

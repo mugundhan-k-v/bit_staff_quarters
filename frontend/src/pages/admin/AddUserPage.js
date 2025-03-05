@@ -10,6 +10,8 @@ const AddUserPage = () => {
     password: '',
     name: '',
     email: '',
+    phone: '',
+    quarters: '',
     role: 'User' // Default role
   });
   const [editingUser, setEditingUser] = useState(null);
@@ -17,8 +19,15 @@ const AddUserPage = () => {
 
   useEffect(() => {
     // Fetch existing users from the backend
-    fetch('http://localhost:5000/api/users')
-      .then(response => response.json())
+    fetch('http://localhost:5000/api/users', {
+      credentials: 'include' // Include credentials in the request
+    })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+      })
       .then(data => setUsers(data))
       .catch(error => console.error('Error fetching users:', error));
   }, []);
@@ -37,13 +46,29 @@ const AddUserPage = () => {
         headers: {
           'Content-Type': 'application/json'
         },
+        credentials: 'include', // Include credentials in the request
         body: JSON.stringify(userData)
       })
-        .then(response => response.json())
+        .then(response => {
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          return response.json();
+        })
         .then(updatedUser => {
+          console.log('Updated User:', updatedUser); // Add this line
           setUsers(users.map(user => (user._id === updatedUser._id ? updatedUser : user)));
           setEditingUser(null);
           setShowForm(false);
+          setUserData({
+            facultyId: '',
+            password: '',
+            name: '',
+            email: '',
+            phone: '',
+            quarters: '',
+            role: 'User'
+          });
         })
         .catch(error => console.error('Error updating user:', error));
     } else {
@@ -53,12 +78,28 @@ const AddUserPage = () => {
         headers: {
           'Content-Type': 'application/json'
         },
+        credentials: 'include', // Include credentials in the request
         body: JSON.stringify(userData)
       })
-        .then(response => response.json())
+        .then(response => {
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          return response.json();
+        })
         .then(newUser => {
+          console.log('New User:', newUser); // Add this line
           setUsers([...users, newUser]);
           setShowForm(false);
+          setUserData({
+            facultyId: '',
+            password: '',
+            name: '',
+            email: '',
+            phone: '',
+            quarters: '',
+            role: 'User'
+          });
         })
         .catch(error => console.error('Error adding user:', error));
     }
@@ -75,9 +116,15 @@ const AddUserPage = () => {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json'
-      }
+      },
+      credentials: 'include' // Include credentials in the request
     })
-      .then(response => response.json())
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+      })
       .then(() => {
         setUsers(users.filter(user => user._id !== userId));
       })
@@ -91,6 +138,8 @@ const AddUserPage = () => {
       password: '',
       name: '',
       email: '',
+      phone: '',
+      quarters: '',
       role: 'User'
     });
     setShowForm(true);
@@ -99,6 +148,15 @@ const AddUserPage = () => {
   const handleCancel = () => {
     setEditingUser(null);
     setShowForm(false);
+    setUserData({
+      facultyId: '',
+      password: '',
+      name: '',
+      email: '',
+      phone: '',
+      quarters: '',
+      role: 'User'
+    });
   };
 
   return (
@@ -114,6 +172,8 @@ const AddUserPage = () => {
               <th>Faculty ID</th>
               <th>Name</th>
               <th>Email</th>
+              <th>Phone</th>
+              <th>Quarters</th>
               <th>Role</th>
               <th>Actions</th>
             </tr>
@@ -124,6 +184,8 @@ const AddUserPage = () => {
                 <td>{user.facultyId}</td>
                 <td>{user.name}</td>
                 <td>{user.email}</td>
+                <td>{user.phone}</td>
+                <td>{user.quarters}</td>
                 <td>{user.role}</td>
                 <td>
                   <div className="action-buttons">
@@ -179,6 +241,26 @@ const AddUserPage = () => {
                     type="email"
                     name="email"
                     value={userData.email}
+                    onChange={handleInputChange}
+                    required
+                  />
+                </label>
+                <label>
+                  Phone:
+                  <input
+                    type="text"
+                    name="phone"
+                    value={userData.phone}
+                    onChange={handleInputChange}
+                    required
+                  />
+                </label>
+                <label>
+                  Quarters:
+                  <input
+                    type="text"
+                    name="quarters"
+                    value={userData.quarters}
                     onChange={handleInputChange}
                     required
                   />

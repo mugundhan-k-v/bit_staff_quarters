@@ -8,14 +8,14 @@
 
 .add-announcement-button {
   margin-bottom: 20px;
-  padding: 10px 10px; /* Reduced padding */
-  font-size: 14px; /* Reduced font size */
-  background-color: #007bff;
+  padding: 10px 10px;
+  font-size: 14px;
+  background-color: #5B4CFF;
   color: white;
   border: none;
   border-radius: 5px;
   cursor: pointer;
-  width: 200px; /* Adjusted width */
+  width: 200px; 
   display: flex;
   align-items: center;
   justify-content: center;
@@ -27,7 +27,7 @@
 }
 
 .add-announcement-button:hover {
-  background-color: #0056b3;
+  background-color: #3a3aff;
 }
 
 .admin-announcement-table-container {
@@ -37,8 +37,8 @@
 .admin-announcement-table {
     width: 100%;
     border-collapse: collapse;
-    box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.1); /* Adds shadow for depth */
-    border-radius: 8px; /* Rounds the corners */
+    box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.1);
+    border-radius: 8px; 
     overflow: hidden;
 }
 
@@ -50,9 +50,9 @@
 }
 
 .admin-announcement-table th {
-    background-color: #000000; /* Black background for the header */
+    background-color: #000000;
     color: #ffffff;
-    font-size: 18px; /* Slightly larger font for headers */
+    font-size: 18px;
     font-weight: bold;
 }
 
@@ -61,11 +61,11 @@
 }
 
 .admin-announcement-table tr:nth-child(even) {
-  background-color: #f2f2f2; /* Alternate row color */
+  background-color: #f2f2f2;
 }
 
 .admin-announcement-table tr:hover {
-  background-color: #ddd; /* Hover effect */
+  background-color: #ddd; 
 }
 
 .admin-announcement-table .action-buttons {
@@ -74,7 +74,7 @@
 }
 
 .admin-announcement-table .anedit-button {
-  background-color: #4CAF50; /* Green */
+  background-color: #4CAF50; 
   color: white;
   border: none;
   border-radius: 5px;
@@ -88,7 +88,7 @@
 }
 
 .admin-announcement-table .delete-button {
-  background-color: #f44336; /* Red */
+  background-color: #f44336; 
   color: white;
   border: none;
   border-radius: 5px;
@@ -102,14 +102,14 @@
 }
 
 button {
-  padding: 5px 10px; /* Reduced padding */
-  font-size: 14px; /* Reduced font size */
+  padding: 5px 10px;
+  font-size: 14px; 
   background-color: #007bff;
   color: white;
   border: none;
   border-radius: 5px;
   cursor: pointer;
-  width: 80px; /* Fixed width */
+  width: 80px; 
 }
 
 button:hover {
