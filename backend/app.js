@@ -10,9 +10,6 @@ dotenv.config();
 
 const app = express();
 
-// Middleware to parse JSON
-app.use(express.json());
-
 // Enable CORS for all routes
 app.use(
   cors({
@@ -21,6 +18,10 @@ app.use(
     credentials: true,
   })
 );
+
+// Middleware to parse JSON and URL-encoded data with increased payload size limit
+app.use(express.json({ limit: '70mb' }));
+app.use(express.urlencoded({ extended: true, limit: '70mb' }));
 
 // Set COOP and COEP headers
 app.use((req, res, next) => {

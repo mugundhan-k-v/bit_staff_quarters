@@ -21,7 +21,6 @@ import AdminProfilePage from './pages/admin/adminprofile';
 import AdminInmateDetailsPage from './pages/admin/admininmatedetails';
 import AdminGuestDetailsPage from './pages/admin/adminguestdetails';
 import AdminComplaintsPage from './pages/admin/admincomplaints';
-import UpdateComplaintPage from './pages/admin/updatecomplaint';
 import AdminAnnouncementPage from './pages/admin/AdminAnnouncementPage';
 import AddUserPage from './pages/admin/AddUserPage';
 
@@ -111,7 +110,6 @@ function App() {
           <Route path="/admininmatedetails" element={<ProtectedRoute element={<AdminInmateDetailsPage />} />} />
           <Route path="/adminguestdetails" element={<ProtectedRoute element={<AdminGuestDetailsPage />} />} />
           <Route path="/admincomplaints" element={<ProtectedRoute element={<AdminComplaintsPage />} />} />
-          <Route path="/updatecomplaint/:id" element={<ProtectedRoute element={<UpdateComplaintPage />} />} />
           <Route path="/adminannouncements" element={<ProtectedRoute element={<AdminAnnouncementPage />} />} />
           <Route path="/adduser" element={<ProtectedRoute element={<AddUserPage />} />} />
           <Route path="/announcement" element={<ProtectedRoute element={<AnnouncementPage />} />} />

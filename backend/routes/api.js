@@ -1,5 +1,7 @@
 const express = require('express');
 const router = express.Router();
+const multer = require('multer');
+const path = require('path');
 const User = require('../models/User');
 const Complaint = require('../models/Complaint');
 const Guest = require('../models/Guest');
@@ -11,10 +13,11 @@ const NodeCache = require('node-cache');
 const { OAuth2Client } = require('google-auth-library');
 const client = new OAuth2Client('4952283494-jggmf8d19jvo55kqrsd3s6ro5m5hvq2a.apps.googleusercontent.com');
 
-
 // Initialize cache
 const myCache = new NodeCache();
 
+const storage = multer.memoryStorage();
+const upload = multer({ storage });
 
 // Google Login Route
 router.post('/google-login', async (req, res) => {
@@ -284,7 +287,7 @@ router.get('/complaints/:id', async (req, res) => {
     res.json(complaint);
   } catch (err) {
     console.error('Error fetching complaint:', err.message);
-    res.status(500).json({ message: err.message });
+    res.status(500).json({ message: 'Internal server error' });
   }
 });
 
@@ -292,19 +295,26 @@ router.get('/complaints/:id', async (req, res) => {
 router.put('/complaints/:id', async (req, res) => {
   const { id } = req.params;
   const { status } = req.body;
+
   try {
+    if (!['Pending', 'Resolved', 'Rejected', 'In Progress'].includes(status)) {
+      return res.status(400).json({ message: 'Invalid status value' });
+    }
+
     const complaint = await Complaint.findByIdAndUpdate(
       id,
       { status },
       { new: true }
     );
+
     if (!complaint) {
       return res.status(404).json({ message: 'Complaint not found' });
     }
+
     res.json(complaint);
   } catch (err) {
     console.error('Error updating complaint status:', err.message);
-    res.status(500).json({ message: err.message });
+    res.status(500).json({ message: 'Internal server error' });
   }
 });
 
@@ -318,13 +328,15 @@ router.get('/complaints-stats', async (req, res) => {
       counts.categories[category] = await Complaint.countDocuments({ category });
     }
 
-    counts.status.Registered = await Complaint.countDocuments();
+    counts.status.Total = await Complaint.countDocuments();
     counts.status.Resolved = await Complaint.countDocuments({ status: 'Resolved' });
     counts.status.InProgress = await Complaint.countDocuments({ status: 'In Progress' });
+    counts.status.Pending = await Complaint.countDocuments({ status: 'Pending' });
+    counts.status.Rejected = await Complaint.countDocuments({ status: 'Rejected' });
 
     res.json(counts);
   } catch (error) {
-    console.error('Error fetching complaint statistics:', error);
+    console.error('Error fetching complaint statistics:', error.message);
     res.status(500).json({ message: 'Internal server error' });
   }
 });
@@ -336,7 +348,7 @@ router.get('/recent-complaints', async (req, res) => {
     res.status(200).json(recentComplaints);
   } catch (err) {
     console.error('Error fetching recent complaints:', err.message);
-    res.status(500).json({ message: err.message });
+    res.status(500).json({ message: 'Internal server error' });
   }
 });
 
@@ -348,7 +360,7 @@ router.get('/allcomplaints', async (req, res) => {
     res.json(complaints);
   } catch (err) {
     console.error('Error fetching complaints:', err.message);
-    res.status(500).json({ message: err.message });
+    res.status(500).json({ message: 'Internal server error' });
   }
 });
 
@@ -357,21 +369,34 @@ router.get('/complaints', async (req, res) => {
   const { facultyId } = req.query;
   try {
     if (!facultyId) {
-      throw new Error('Faculty ID is required');
+      return res.status(400).json({ message: 'Faculty ID is required' });
     }
+
     const complaints = await Complaint.find({ facultyId });
     console.log(`Found ${complaints.length} complaints for faculty ID: ${facultyId}`);
     res.json(complaints);
   } catch (err) {
     console.error('Error fetching complaints:', err.message);
-    res.status(500).json({ message: err.message });
+    res.status(500).json({ message: 'Internal server error' });
   }
 });
 
-// Add a new complaint
-router.post('/complaints', async (req, res) => {
-  const { facultyId, category, quarters, description, status, createdAt } = req.body;
-  console.log('Adding new complaint:', { facultyId, description });
+// Add a new complaint with file upload
+router.post('/complaints', upload.single('proof'), async (req, res) => {
+  const { facultyId, category, quarters, description } = req.body;
+
+  // Validate input fields
+  if (!facultyId || !category || !quarters || !description) {
+    return res.status(400).json({ message: 'All fields are required' });
+  }
+
+  if (!['Plumbing', 'Carpentry', 'Electrical', 'Gardening', 'Others'].includes(category)) {
+    return res.status(400).json({ message: 'Invalid category value' });
+  }
+
+  const proof = req.file
+    ? { data: req.file.buffer.toString('base64'), contentType: req.file.mimetype }
+    : null;
 
   try {
     const newComplaint = new Complaint({
@@ -379,16 +404,15 @@ router.post('/complaints', async (req, res) => {
       category,
       quarters,
       description,
-      status,
-      createdAt
+      status: 'Pending',
+      proof,
     });
 
     const savedComplaint = await newComplaint.save();
-    console.log('Complaint added successfully:', savedComplaint);
     res.status(201).json(savedComplaint);
   } catch (err) {
     console.error('Error adding complaint:', err.message);
-    res.status(500).json({ message: err.message });
+    res.status(500).json({ message: 'Internal server error' });
   }
 });
 
@@ -464,16 +488,6 @@ router.post('/inmatecheckins', async (req, res) => {
   }
 });
 
-// Fetch all complaints
-router.get('/allcomplaints', async (req, res) => {
-  try {
-    const complaints = await Complaint.find();
-    res.status(200).json(complaints);
-  } catch (err) {
-    console.error('Error fetching all complaints:', err.message);
-    res.status(500).json({ message: err.message });
-  }
-});
 
 // Fetch all inmates
 router.get('/allinmates', async (req, res) => {
